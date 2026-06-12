@@ -42,4 +42,10 @@ runs:
 
         # actions/cache에서는 'docker' usergroup이 소유하고 있는 파일에 접근할 수 없어, 부득이하게 Docker volume의 압축파일을 생성하여 캐시한다.
         # See https://github.com/actions/cache/issues/31
+        #
+        # 살아있는 postgres 의 데이터 디렉토리를 tar 하면 WAL 쓰기와 읽기가 겹쳐
+        # "file changed as we read it" 으로 tar 가 exit 1 을 내고, 이 스텝이 간헐적으로 실패한다.
+        # db 를 멈춰 데이터 디렉토리를 정지시킨 뒤 tar 해야 레이스가 없고, clean shutdown 상태라
+        # 복원 시에도 일관된(WAL replay 불필요) 스냅샷이 된다.
+        docker compose -f ./docker/testing.yaml stop db
         sudo tar -cvf db-volume.tar ./db-volume
