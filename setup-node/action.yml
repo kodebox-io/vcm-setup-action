@@ -34,7 +34,7 @@ runs:
       if: inputs.install-zuzu-dependencies == 'true' && steps.cache-yarn.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        ./zz deps_react
+        ./vv deps_react
 
     - name: Install retry-cli
       if: inputs.install-zuzu-dependencies != 'true' && steps.cache-yarn-retry-cli.outputs.cache-hit != 'true'
@@ -47,4 +47,4 @@ runs:
       if: steps.cache-yarn.outputs.cache-hit == 'true' || steps.cache-yarn-retry-cli.outputs.cache-hit == 'true'
       shell: bash
       run: |
-        ./zz deps_react_init
+        ./vv deps_react_init

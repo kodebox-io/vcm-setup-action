@@ -46,4 +46,4 @@ runs:
       if: inputs.install-zuzu-dependencies == 'true'
       shell: bash
       run: |
-        ./zz deps_django
+        ./vv deps_django

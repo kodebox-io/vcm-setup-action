@@ -14,7 +14,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ./db-volume.tar
-        key: db-${{ runner.os }}-${{ inputs.db-snapshot-artifact-run-id }}-${{ hashFiles('zuzu/**/migrations/*.py') }}
+        key: db-${{ runner.os }}-${{ inputs.db-snapshot-artifact-run-id }}-${{ hashFiles('vcm/db/migrations/*.py') }}
         restore-keys: |
           db-${{ runner.os }}-${{ inputs.db-snapshot-artifact-run-id }}-
 
@@ -24,7 +24,7 @@ runs:
       run: |
         sudo tar -xvf db-volume.tar
 
-    - uses: kodebox-io/captain-setup-action/setup-db-with-artifact@master
+    - uses: kodebox-io/vcm-setup-action/setup-db-with-artifact@master
       if: steps.cache-db.outputs.cache-hit != 'true'
       with:
         github-token: ${{ inputs.github-token }}
@@ -35,10 +35,10 @@ runs:
       shell: bash
       run: |
         docker compose -f ./docker/testing.yaml up -d db
-        for _ in $(seq 3); do yarn retry -t 1000 --max-timeout=60000 ./zz db_isready; sleep 1; done
+        for _ in $(seq 3); do yarn retry -t 1000 --max-timeout=60000 ./vv db_isready; sleep 1; done
 
-        ./zz migrate --no-input
-        ./zz backupdb postgres test_postgres
+        ./vv migrate --no-input
+        ./vv backupdb postgres test_postgres
 
         # actions/cache에서는 'docker' usergroup이 소유하고 있는 파일에 접근할 수 없어, 부득이하게 Docker volume의 압축파일을 생성하여 캐시한다.
         # See https://github.com/actions/cache/issues/31
