@@ -24,7 +24,7 @@ runs:
       run: |
         sudo tar -xvf db-volume.tar
 
-    - uses: kodebox-io/vcm-setup-action/setup-db-with-artifact@pnpm
+    - uses: kodebox-io/vcm-setup-action/setup-db-with-artifact@master
       if: steps.cache-db.outputs.cache-hit != 'true'
       with:
         github-token: ${{ inputs.github-token }}

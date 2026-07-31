@@ -18,15 +18,15 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - uses: kodebox-io/vcm-setup-action/setup-node@pnpm
+    - uses: kodebox-io/vcm-setup-action/setup-node@master
       with:
         install-zuzu-dependencies: ${{ inputs.cache-node }}
 
-    - uses: kodebox-io/vcm-setup-action/setup-python@pnpm
+    - uses: kodebox-io/vcm-setup-action/setup-python@master
       with:
         install-zuzu-dependencies: ${{ inputs.cache-venv }}
 
-    - uses: kodebox-io/vcm-setup-action/cache-db@pnpm
+    - uses: kodebox-io/vcm-setup-action/cache-db@master
       if: inputs.cache-db == 'true'
       with:
         github-token: ${{ inputs.github-token }}
