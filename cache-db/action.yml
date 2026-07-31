@@ -24,7 +24,7 @@ runs:
       run: |
         sudo tar -xvf db-volume.tar
 
-    - uses: kodebox-io/vcm-setup-action/setup-db-with-artifact@master
+    - uses: kodebox-io/vcm-setup-action/setup-db-with-artifact@pnpm
       if: steps.cache-db.outputs.cache-hit != 'true'
       with:
         github-token: ${{ inputs.github-token }}
@@ -35,7 +35,7 @@ runs:
       shell: bash
       run: |
         docker compose -f ./docker/testing.yaml up -d db
-        for _ in $(seq 3); do yarn retry -t 1000 --max-timeout=60000 ./vv db_isready; sleep 1; done
+        for _ in $(seq 3); do pnpm exec retry -t 1000 --max-timeout=60000 ./vv db_isready; sleep 1; done
 
         ./vv migrate --no-input
         ./vv backupdb postgres test_postgres

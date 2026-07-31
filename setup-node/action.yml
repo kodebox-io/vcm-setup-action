@@ -1,50 +1,42 @@
 name: "Setup Node"
 
+# yarn 시절에는 "전체 의존성" / "retry-cli 만" 두 경로를 나눴지만,
+# pnpm 전환으로 단일 경로로 통합했다. retry-cli 만 필요한 잡도
+# lockfile 해시 캐시를 공유하므로 miss 는 lockfile 변경 직후 한 번뿐이다.
 inputs:
   install-zuzu-dependencies:
+    description: "(호환용) 경로 통합으로 더 이상 분기하지 않는다."
     default: "false"
 
 runs:
   using: "composite"
   steps:
-    - name: Cache `yarn.lock` node_modules
-      if: inputs.install-zuzu-dependencies == 'true'
-      id: cache-yarn
-      uses: actions/cache@v4
-      with:
-        path: ./node_modules
-        key: node-modules-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-        restore-keys: |
-          node-modules-${{ runner.os }}-
-
-    - name: Cache `retry-cli` node_modules
-      if: inputs.install-zuzu-dependencies != 'true'
-      id: cache-yarn-retry-cli
-      uses: actions/cache@v4
-      with:
-        path: ./node_modules
-        key: node-modules-retry-cli
-
     - name: Setup Node 20
       uses: actions/setup-node@v4
       with:
         node-version: "20"
 
-    - name: Install ZUZU dependencies
-      if: inputs.install-zuzu-dependencies == 'true' && steps.cache-yarn.outputs.cache-hit != 'true'
+    - name: Enable corepack (pnpm)
       shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      run: |
+        corepack enable
+        pnpm --version
+
+    - name: Cache `pnpm-lock.yaml` node_modules
+      id: cache-node
+      uses: actions/cache@v4
+      with:
+        path: ./node_modules
+        key: node-modules-${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          node-modules-${{ runner.os }}-pnpm-
+
+    - name: Install ZUZU dependencies
+      if: steps.cache-node.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       run: |
         ./vv deps_react
-
-    - name: Install retry-cli
-      if: inputs.install-zuzu-dependencies != 'true' && steps.cache-yarn-retry-cli.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        yarn add --dev -W retry-cli@^0.7.0
-        yarn patch-package
-
-    - name: Initialize Lerna
-      if: steps.cache-yarn.outputs.cache-hit == 'true' || steps.cache-yarn-retry-cli.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        ./vv deps_react_init
