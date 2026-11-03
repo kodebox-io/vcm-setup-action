@@ -7,10 +7,23 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Python 3.11
+    # 버전은 체크아웃한 저장소의 .python-version 을 따른다. 이 액션은 모든 브랜치가 @master 로
+    # 함께 쓰므로, 파일이 없는 브랜치(전환 전 브랜치·production)는 그동안 쓰던 3.11 로 돈다.
+    - name: Resolve Python version
+      id: python-version
+      shell: bash
+      run: |
+        if [ -f .python-version ]; then
+          version=$(head -n1 .python-version | tr -d '[:space:]')
+        else
+          version="3.11"
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Python ${{ steps.python-version.outputs.version }}
       uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: ${{ steps.python-version.outputs.version }}
         architecture: "x64"
 
     - name: Setup uv
@@ -25,9 +38,10 @@ runs:
       uses: actions/cache@v4
       with:
         path: ./.venv
-        key: venv-${{ runner.os }}-${{ hashFiles('./uv.lock') }}
+        # 다른 Python 버전으로 만든 .venv 를 복원하지 않게 버전을 키에 넣는다.
+        key: venv-${{ runner.os }}-py${{ steps.python-version.outputs.version }}-${{ hashFiles('./uv.lock') }}
         restore-keys: |
-          venv-${{ runner.os }}-
+          venv-${{ runner.os }}-py${{ steps.python-version.outputs.version }}-
 
     - name: Check .venv
       id: check-venv
